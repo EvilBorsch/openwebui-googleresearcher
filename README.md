@@ -76,6 +76,44 @@ USER_AGENT=AI-Researcher/0.1
     ```
   - Response: Structured JSON with summary, citations, and page data suitable for LLMs.
 
+### Response format
+- Status: 200 OK
+- Content-Type: application/json
+- Body shape:
+  - **topic** (string): Original query.
+  - **summary** (string): Grounded synthesis written by the LLM from fetched content.
+  - **citations** (array of objects): Search results used as references.
+    - **url** (string): Source URL.
+    - **title** (string|null): Source title when available.
+    - **snippet** (string|null): Short snippet/preview from search.
+  - **pages** (array of objects): Parsed pages returned by the service for downstream LLM consumption.
+    - **url** (string): Page URL.
+    - **title** (string|null): Parsed/short title.
+    - **content_text** (string|null): Readability-extracted main text.
+    - **links_followed** (array of strings|null): In-site links chosen during parsing; may be absent or limited.
+    - **metadata** (object|null): Reserved for future use.
+
+Example:
+```json
+{
+  "topic": "Compare vector databases for RAG in production",
+  "summary": "(Grounded synthesis referencing parsed sources)...",
+  "citations": [
+    {"url": "https://example.com/..", "title": "...", "snippet": "..."},
+    {"url": "https://vendor.com/rag-guide", "title": "RAG guide", "snippet": "..."}
+  ],
+  "pages": [
+    {
+      "url": "https://example.com/..",
+      "title": "Example article",
+      "content_text": "Longer extracted article text...",
+      "links_followed": ["https://example.com/pricing", "https://example.com/perf"],
+      "metadata": null
+    }
+  ]
+}
+```
+
 ### How it works (Stepwise LLM + Tools)
 - **Entry (Open WebUI)**: A user query is POSTed to `/research`.
 - **Single cached search**: The system calls `cached_google_search` once per request (TTL cache) to get top N results.
