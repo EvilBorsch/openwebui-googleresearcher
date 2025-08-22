@@ -10,13 +10,16 @@ setup_logging()
 @router.post(
     "/research",
     response_model=ResearchResult,
-    summary="Web research (search / поищи / изучи using current web information)",
+    summary="Web research ONLY (use for: search/поищи/изучи/актуальная информация)",
     description=(
-        "Perform stepwise web research using live web search and page parsing. "
-        "Use this tool when asked to: search, find, browse, investigate, use up-to-date/current information; "
-        "or in Russian: поищи, найди, изучи, используй актуальную/текущую информацию. "
-        "The tool runs a single TTL-cached Google search, parses the first result, selectively deepens via in-site links, "
-        "and moves to the next result if needed. Returns a grounded summary with citations and structured pages to avoid hallucinations."
+        "Use this tool ONLY for web research that requires live, up-to-date information (news, tickets, prices, schedules, current facts) "
+        "or when the user explicitly requests browsing/searching the web.\n\n"
+        "Positive triggers (English): search, browse, investigate, use web, up-to-date/current info, tickets, price, schedule, news.\n"
+        "Положительные триггеры (RU): поищи, найди, изучи, используй актуальную/свежую информацию, билеты, цена, расписание, новости.\n\n"
+        "Do NOT use for: subjective/opinion or preference questions (e.g., \"что лучше пицца или суши?\"), brainstorming, coding/math without needing the web, general knowledge that does not require recency, translation, or summarizing text already provided. "
+        "If the request does not clearly ask for web search or up-to-date info, do not call this tool.\n\n"
+        "Behavior: performs one TTL-cached Google search, parses the first result, selectively deepens via in-site links, and moves to the next result only if needed. "
+        "Returns a grounded summary with citations and structured pages to avoid hallucinations."
     ),
 )
 async def research_endpoint(payload: ResearchRequest) -> ResearchResult:
