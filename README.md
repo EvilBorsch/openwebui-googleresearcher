@@ -33,6 +33,7 @@ GOOGLE_API_KEY=your_google_api_key
 GOOGLE_CSE_ID=your_google_cse_id
 OPENROUTER_API_KEY=your_openrouter_api_key
 # optional
+API_TOKEN=your_bearer_token
 OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
 REQUEST_TIMEOUT_SECONDS=15
 LLM_TIMEOUT_SECONDS=25
@@ -40,7 +41,7 @@ AGENT_MAX_STEPS=6
 SEARCH_TTL_SECONDS=900
 USER_AGENT=AI-Researcher/0.1
 ```
-`.env` is loaded automatically at startup.
+`.env` is loaded automatically at startup. If `API_TOKEN` is set, all endpoints require header `Authorization: Bearer <API_TOKEN>`.
 
 ### Docker
 - Build and run with Docker (loads `.env` into the container):
@@ -57,6 +58,7 @@ USER_AGENT=AI-Researcher/0.1
 - `GOOGLE_API_KEY`: Google API key for Custom Search
 - `GOOGLE_CSE_ID`: Google Custom Search Engine ID
 - `OPENROUTER_API_KEY`: OpenRouter API key
+- `API_TOKEN` (optional): If present, required Bearer token for all requests
 - `OPENROUTER_BASE_URL` (optional): Default `https://openrouter.ai/api/v1`
 - `REQUEST_TIMEOUT_SECONDS` (optional): Default 15
 - `LLM_TIMEOUT_SECONDS` (optional): Default 25
@@ -66,6 +68,7 @@ USER_AGENT=AI-Researcher/0.1
 
 ### API
 - POST `/research`
+  - Headers (if `API_TOKEN` set): `Authorization: Bearer <API_TOKEN>`
   - Body:
     ```json
     {
@@ -75,6 +78,17 @@ USER_AGENT=AI-Researcher/0.1
     }
     ```
   - Response: Structured JSON with summary, citations, and page data suitable for LLMs.
+
+Curl example with auth:
+```bash
+curl -s http://localhost:8000/research \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $API_TOKEN" \
+  -d '{"query":"Impact of climate change on polar bears","max_search_results":5}'
+```
+
+Open WebUI:
+- When adding your tool server, include the header `Authorization: Bearer <API_TOKEN>` in the server config (if the UI supports per-tool headers), or configure a proxy that injects it.
 
 ### Response format
 - Status: 200 OK
@@ -207,8 +221,8 @@ flowchart TD
   - Go to Settings → Tools → Add OpenAPI Tool Server.
   - Enter your server base URL or the OpenAPI URL: `http://localhost:8000/openapi.json`.
   - Increase tool Timeout (ms) if you want deeper research (e.g., 120000–300000).
+  - If `API_TOKEN` is set, configure the tool server to send header `Authorization: Bearer <API_TOKEN>`.
   - Save. Open WebUI will ingest the schema and expose the `/research` tool.
-- Test by invoking the Research tool with your query; results will appear with grounded citations.
 
 ### OpenAPI
 FastAPI auto-exposes OpenAPI at `/openapi.json` for Open WebUI integration.

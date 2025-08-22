@@ -21,6 +21,8 @@ class Settings(BaseSettings):
 
     search_ttl_seconds: int = Field(default=900, alias="SEARCH_TTL_SECONDS")
 
+    api_token: str = Field(default="", alias="API_TOKEN")
+
     # pydantic-settings v2 config
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
