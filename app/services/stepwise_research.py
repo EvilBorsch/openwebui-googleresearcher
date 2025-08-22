@@ -40,7 +40,9 @@ def run_stepwise_research(query: str, instructions: str | None, max_results: int
         "If it likely contains the answer but needs context, fetch a FEW in-site links (via fetch_page on those links). "
         "If it clearly does NOT contain the answer, move to the NEXT Google result. "
         f"Stop after at most {MAX_STEPS} total tool calls. "
-        "Only rely on content you fetched. Finish with a concise grounded answer."
+        "Only rely on content you fetched. Finish with a concise grounded answer. "
+        "For time/place-sensitive queries (e.g., movie showtimes, tickets, schedules in a city on a date), do NOT give generic disclaimers. "
+        "Instead, escalate to the next result and parse multiple authoritative sources (ticketing and cinema listings) until you can provide an actionable answer or conclude unavailability."
     )
 
     q = query if not instructions else f"{query}\nInstructions: {instructions}"
@@ -52,14 +54,16 @@ def run_stepwise_research(query: str, instructions: str | None, max_results: int
     results = cached_google_search.invoke({"query": query, "max_results": max_results})
 
     pages: List[Dict[str, Any]] = []
-    if results and results[0].get("link"):
-        logger.info(f"[stepwise] deterministic-include first result url={results[0]['link']}")
+    for r in results[:3]:
+        if not r.get("link"):
+            continue
         try:
-            first_parsed = fetch_page.invoke({"url": results[0]["link"]})
-            if first_parsed:
-                pages.append(first_parsed)
+            logger.info(f"[stepwise] include result url={r['link']}")
+            parsed = fetch_page.invoke({"url": r["link"]})
+            if parsed:
+                pages.append(parsed)
         except Exception as e:
-            logger.warning(f"[stepwise] failed to include first page: {e}")
+            logger.warning(f"[stepwise] failed to parse page: {e}")
 
     citations: List[Dict[str, Any]] = []
     for idx, r in enumerate(results, start=1):
