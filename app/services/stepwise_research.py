@@ -34,13 +34,14 @@ def run_stepwise_research(query: str, instructions: str | None, max_results: int
     agent = make_stepwise_agent(max_steps=(max_iterations or MAX_STEPS_DEFAULT))
 
     system_prompt = (
-        "You are a stepwise researcher. Strict rules: "
-        "Use cached_google_search ONCE. Begin with the FIRST result. "
+        "You are a stepwise researcher. This tool is designed for iterative use and may be called multiple times if uncertainty remains. "
+        "Strict rules: Use cached_google_search ONCE per call. Begin with the FIRST result. "
         "After each fetch_page, decide if the page already contains the answer. "
         "If it likely contains the answer but needs context, fetch a FEW in-site links (via fetch_page on those links). "
         "If it clearly does NOT contain the answer, move to the NEXT Google result. "
         f"Stop after at most {max_iterations or MAX_STEPS_DEFAULT} total tool calls. "
         "Only rely on content you fetched. Finish with a concise grounded answer. "
+        "If uncertain, explicitly recommend a follow-up tool call with higher parse_top_n and max_iterations and set force_escalate=true. "
         "For time/place-sensitive queries (e.g., movie showtimes, tickets, schedules in a city on a date), do NOT give generic disclaimers. "
         "Instead, escalate to the next result and parse multiple authoritative sources (ticketing and cinema listings) until you can provide an actionable answer or conclude unavailability."
     )
@@ -67,7 +68,6 @@ def run_stepwise_research(query: str, instructions: str | None, max_results: int
         except Exception as e:
             logger.warning(f"[stepwise] failed to parse page: {e}")
 
-    # Continuation hint: if summary contains uncertainty phrases and we didn't parse many pages, suggest another call
     uncertain = any(kw in final_text.lower() for kw in ["неизвест", "недоступн", "точное расписание", "not available", "unknown", "closer to the date"])
     continuation: Dict[str, Any] = {}
     if uncertain and len(pages) < parse_top_n and len(results) > len(pages):
