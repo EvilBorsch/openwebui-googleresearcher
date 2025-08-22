@@ -18,7 +18,13 @@ setup_logging()
         "Положительные триггеры (RU): поищи, найди, изучи, используй актуальную/свежую информацию, билеты, цена, расписание, новости.\n\n"
         "Do NOT use for: subjective/opinion or preference questions (e.g., \"что лучше пицца или суши?\"), brainstorming, coding/math without needing the web, general knowledge that does not require recency, translation, or summarizing text already provided. "
         "If the request does not clearly ask for web search or up-to-date info, do not call this tool.\n\n"
-        "Behavior: performs one TTL-cached Google search, parses the first result, selectively deepens via in-site links, and moves to the next result only if needed. "
+        "Multiple calls are OK and encouraged if uncertain: This tool is idempotent and caches Google search results (TTL). "
+        "If the answer seems incomplete/uncertain, CALL THIS TOOL AGAIN with higher \"parse_top_n\" and \"max_iterations\" and optionally \"force_escalate\".\n"
+        "Example follow-ups: \n"
+        "- Call 1: { query } -> if uncertain\n"
+        "- Call 2: { query, parse_top_n: 4, max_iterations: 8, force_escalate: true } -> if still uncertain\n"
+        "- Call 3: { query, parse_top_n: 5, max_iterations: 10, force_escalate: true }\n\n"
+        "Behavior: performs one TTL-cached Google search, parses top-N results (configurable), selectively deepens via in-site links, and moves to the next result only if needed. "
         "Returns a grounded summary with citations and structured pages to avoid hallucinations."
     ),
 )
