@@ -29,10 +29,13 @@ async def research_endpoint(payload: ResearchRequest) -> ResearchResult:
             logger.info(f"[request] instructions='{payload.instructions}'")
 
         from ..services.stepwise_research import run_stepwise_research
-        summary_text, citations_raw, pages_raw = run_stepwise_research(
+        summary_text, citations_raw, pages_raw, continuation = run_stepwise_research(
             query=payload.query,
             instructions=payload.instructions,
             max_results=payload.max_search_results,
+            parse_top_n=payload.parse_top_n,
+            max_iterations=payload.max_iterations,
+            force_escalate=payload.force_escalate,
         )
 
         citations: List[Citation] = [
@@ -56,6 +59,7 @@ async def research_endpoint(payload: ResearchRequest) -> ResearchResult:
             summary=summary_text,
             citations=citations,
             pages=pages,
+            continuation=continuation or None,
         )
     except Exception as e:
         logger.exception("research_endpoint error")
